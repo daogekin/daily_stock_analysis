@@ -297,6 +297,32 @@
             transform: translateY(0);
         }
 
+        .stock-hints {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .hint-item {
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .hint-item:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--accent-green);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
         .stock-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -768,7 +794,7 @@
                 <div class="logo-icon">📈</div>
                 <div class="logo-text">
                     <h1>股票提醒助手</h1>
-                    <p>本地数据 · 隐私安全 · 自动提醒</p>
+                    <p>本地数据 · 全球市场 · 隐私安全</p>
                 </div>
             </div>
             <div class="header-info">
@@ -795,13 +821,18 @@
                             type="text" 
                             class="stock-input" 
                             id="stockInput" 
-                            placeholder="输入股票代码，如: 600519"
+                            placeholder="输入股票代码，如: 600519、AAPL、00700.HK"
                             onkeypress="handleKeyPress(event)"
                         >
                         <button class="add-btn" onclick="addStock()">
                             <span>➕</span>
                             添加
                         </button>
+                    </div>
+                    <div class="stock-hints">
+                        <span class="hint-item">🇨🇳 600519</span>
+                        <span class="hint-item">🇺🇸 AAPL</span>
+                        <span class="hint-item">🇭🇰 00700.HK</span>
                     </div>
                     <div class="stock-grid" id="stockGrid">
                         <div class="empty-state">
@@ -920,13 +951,21 @@
                         name: 'eastmoney',
                         url: (code) => `https://push2.eastmoney.com/api/qt/stock/get?secid=${this.getMarketCode(code)}.${code}&fields=f43,f44,f45,f46,f47,f48,f57,f58`,
                         parser: this.parseEastmoneyData.bind(this)
+                    },
+                    {
+                        name: 'yahoo',
+                        url: (code) => `https://query1.finance.yahoo.com/v8/finance/chart/${this.formatYahooCode(code)}?interval=1d&range=5d`,
+                        parser: this.parseYahooData.bind(this)
                     }
                 ];
             }
 
             formatCode(code) {
                 code = code.trim().toUpperCase();
-                if (!code.startsWith('SH') && !code.startsWith('SZ') && !code.startsWith('HK')) {
+                // 检查是否是美股（包含字母，不以SH/SZ/HK开头）
+                const isUSStock = /^[A-Z]+$/.test(code) || code.includes('.');
+                
+                if (!isUSStock && !code.startsWith('SH') && !code.startsWith('SZ') && !code.startsWith('HK')) {
                     if (code.startsWith('6')) {
                         code = 'sh' + code;
                     } else if (code.startsWith('0') || code.startsWith('3')) {
@@ -938,12 +977,42 @@
                 return code;
             }
 
+            formatYahooCode(code) {
+                code = code.trim().toUpperCase();
+                // 转换为雅虎格式
+                if (code.startsWith('SH') || code.startsWith('SZ')) {
+                    // A股转换为SS/SZ
+                    return code.replace(/^SH/, '') + '.SS' || code.replace(/^SZ/, '') + '.SZ';
+                } else if (code.startsWith('0') || code.startsWith('3') || code.startsWith('6')) {
+                    return code + (code.startsWith('6') ? '.SS' : '.SZ');
+                } else if (code.includes('.HK')) {
+                    // 港股
+                    return code;
+                }
+                // 美股直接返回
+                return code;
+            }
+
             getMarketCode(code) {
-                code = code.trim();
-                if (code.startsWith('6')) return '1';  // 上证
-                if (code.startsWith('0') || code.startsWith('3')) return '0';  // 深证
+                code = code.trim().toUpperCase();
+                if (code.startsWith('6') || code.startsWith('SH')) return '1';  // 上证
+                if (code.startsWith('0') || code.startsWith('3') || code.startsWith('SZ')) return '0';  // 深证
                 if (code.startsWith('4') || code.startsWith('8')) return '0';  // 北交所
                 return '1';
+            }
+
+            isUSStock(code) {
+                code = code.trim().toUpperCase();
+                // 判断是否是美股：纯字母、或包含.US/.O/.N等后缀
+                if (/^[A-Z]+$/.test(code) && !code.startsWith('SH') && !code.startsWith('SZ') && !code.startsWith('HK')) {
+                    return true;
+                }
+                if (code.includes('.') && (code.endsWith('.US') || code.endsWith('.O') || code.endsWith('.N') || 
+                                           code.endsWith('.NYSE') || code.endsWith('.NASDAQ') || 
+                                           code.endsWith('.ARCA') || !code.includes('.SS') && !code.includes('.SZ') && !code.includes('.HK'))) {
+                    return true;
+                }
+                return false;
             }
 
             async fetchStockData(code) {
@@ -954,13 +1023,30 @@
                     return cached.data;
                 }
 
-                for (const source of this.apiSources) {
+                // 根据股票类型选择数据源
+                const isUS = this.isUSStock(code);
+                
+                // 重新排序数据源：美股优先用雅虎，A股优先用新浪
+                let sources = [...this.apiSources];
+                if (isUS) {
+                    // 美股优先用雅虎财经
+                    const yahooIndex = sources.findIndex(s => s.name === 'yahoo');
+                    if (yahooIndex > 0) {
+                        const yahooSource = sources.splice(yahooIndex, 1)[0];
+                        sources.unshift(yahooSource);
+                    }
+                } else {
+                    // A股优先用新浪和东方财富
+                    sources = sources.filter(s => s.name !== 'yahoo');
+                }
+
+                for (const source of sources) {
                     try {
                         const response = await fetch(source.url(code), {
                             method: 'GET',
                             headers: {
                                 'Accept': '*/*',
-                                'Referer': 'https://finance.sina.com.cn'
+                                'Referer': isUS ? 'https://finance.yahoo.com' : 'https://finance.sina.com.cn'
                             }
                         });
 
@@ -1050,6 +1136,54 @@
                     };
                 } catch (error) {
                     console.error('解析东方财富数据失败:', error);
+                    return null;
+                }
+            }
+
+            parseYahooData(text, code) {
+                try {
+                    const data = JSON.parse(text);
+                    if (!data.chart || !data.chart.result || data.chart.result.length === 0) return null;
+                    
+                    const result = data.chart.result[0];
+                    const meta = result.meta;
+                    const quote = result.indicators.quote[0];
+                    
+                    const currentPrice = meta.regularMarketPrice || meta.chartPreviousClose || 0;
+                    const yesterdayClose = meta.chartPreviousClose || meta.previousClose || 0;
+                    const changeAmount = currentPrice - yesterdayClose;
+                    const changePercent = yesterdayClose ? (changeAmount / yesterdayClose * 100) : 0;
+                    
+                    // 获取开盘、最高、最低价
+                    let openPrice = meta.regularMarketPrice;
+                    let highPrice = meta.regularMarketPrice;
+                    let lowPrice = meta.regularMarketPrice;
+                    let volume = 0;
+                    
+                    if (result.timestamp && result.timestamp.length > 0 && quote.open && quote.open.length > 0) {
+                        const lastIndex = result.timestamp.length - 1;
+                        openPrice = quote.open[lastIndex] || openPrice;
+                        highPrice = quote.high[lastIndex] || highPrice;
+                        lowPrice = quote.low[lastIndex] || lowPrice;
+                        volume = quote.volume[lastIndex] || 0;
+                    }
+                    
+                    return {
+                        code: code,
+                        name: meta.shortName || meta.longName || code,
+                        currentPrice: currentPrice,
+                        yesterdayClose: yesterdayClose,
+                        openPrice: openPrice,
+                        highPrice: highPrice,
+                        lowPrice: lowPrice,
+                        volume: volume,
+                        turnover: 0, // 雅虎数据不提供成交额
+                        changeAmount: changeAmount,
+                        changePercent: changePercent,
+                        timestamp: Date.now()
+                    };
+                } catch (error) {
+                    console.error('解析雅虎数据失败:', error);
                     return null;
                 }
             }
@@ -1171,6 +1305,15 @@
             loadSettings();
             
             setupScheduler();
+
+            // 绑定提示项点击事件
+            document.querySelectorAll('.hint-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const code = item.textContent.split(' ')[1]; // 提取代码部分
+                    document.getElementById('stockInput').value = code;
+                    addStock();
+                });
+            });
 
             document.getElementById('stockInput').focus();
         }

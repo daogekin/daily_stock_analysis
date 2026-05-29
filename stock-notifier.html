@@ -714,6 +714,257 @@
             color: var(--text-primary);
             font-size: 14px;
             transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .source-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .source-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .source-info h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .source-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .source-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.active {
+            background: var(--accent-green);
+        }
+
+        .status-dot.inactive {
+            background: var(--text-secondary);
+        }
+
+        .analysis-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .analysis-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .analysis-content {
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 600;
+        }
+
+        .stat-value.up {
+            color: var(--accent-green);
+        }
+
+        .stat-value.down {
+            color: var(--accent-red);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-row button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-green);
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-primary {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-secondary {
+            padding: 14px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-green);
+        }
+
+        .btn-danger {
+            padding: 14px 24px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--accent-red);
+            border-radius: 12px;
+            color: var(--accent-red);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-danger:hover {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: var(--accent-green);
+            border-bottom-color: var(--accent-green);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
 
         .form-input:focus {
@@ -1079,38 +1330,188 @@
             </div>
 
             <div class="right-panel">
-                <div class="settings-card">
+                <div class="card">
                     <h3 class="card-title">
-                        <span class="icon">⚙️</span>
-                        提醒设置
+                        <span class="icon">🔧</span>
+                        功能控制
                     </h3>
                     
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <h4>自动提醒</h4>
-                            <p>每日定时发送股票分析</p>
-                        </div>
-                        <div class="toggle-switch" id="autoNotifyToggle" onclick="toggleAutoNotify()"></div>
+                    <div class="tab-container">
+                        <button class="tab active" data-tab="settings">设置</button>
+                        <button class="tab" data-tab="api">API配置</button>
+                        <button class="tab" data-tab="sources">数据来源</button>
+                        <button class="tab" data-tab="analysis">分析生成</button>
                     </div>
 
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <h4>提醒时间</h4>
-                            <p>选择每日提醒时间</p>
+                    <div class="tab-content active" id="settings-tab">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>自动提醒</h4>
+                                <p>每日定时发送股票分析</p>
+                            </div>
+                            <div class="toggle-switch" id="autoNotifyToggle" onclick="toggleAutoNotify()"></div>
                         </div>
-                        <input 
-                            type="time" 
-                            class="time-input" 
-                            id="notifyTime" 
-                            value="15:00"
-                            onchange="updateNotifyTime()"
-                        >
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>提醒时间</h4>
+                                <p>选择每日提醒时间</p>
+                            </div>
+                            <input 
+                                type="time" 
+                                class="time-input" 
+                                id="notifyTime" 
+                                value="15:00"
+                                onchange="updateNotifyTime()"
+                            />
+                        </div>
+
+                        <div class="btn-row" style="margin-top: 24px;">
+                            <button class="btn-primary" onclick="sendTestNotification()">
+                                <span>🧪</span>
+                                测试通知
+                            </button>
+                        </div>
                     </div>
 
-                    <button class="test-notify-btn" onclick="sendTestNotification()">
-                        <span>🧪</span>
-                        测试通知
-                    </button>
+                    <div class="tab-content" id="api-tab">
+                        <div class="form-group">
+                            <label class="form-label">Alpha Vantage API Key</label>
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                id="alphaVantageKey"
+                                placeholder="输入你的API密钥"
+                                value="demo"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">其他API Key（可选）</label>
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                id="otherApiKey"
+                                placeholder="其他服务的API密钥"
+                            />
+                        </div>
+
+                        <div class="btn-row">
+                            <button class="btn-primary" onclick="saveApiSettings()">
+                                <span>💾</span>
+                                保存设置
+                            </button>
+                            <button class="btn-secondary" onclick="clearApiSettings()">
+                                <span>🗑️</span>
+                                清空
+                            </button>
+                        </div>
+
+                        <div class="analysis-panel" style="margin-top: 24px;">
+                            <h4 class="analysis-title">💡 提示</h4>
+                            <div class="analysis-content" style="font-size: 13px; line-height: 1.8;">
+                                <p>获取免费API密钥：</p>
+                                <p><a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color: var(--accent-green);">Alpha Vantage</a></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="sources-tab">
+                        <div class="source-list">
+                            <div class="source-item">
+                                <div class="source-info">
+                                    <h4>新浪财经</h4>
+                                    <p>A股实时行情数据</p>
+                                </div>
+                                <div class="source-status">
+                                    <div class="status-dot active" id="sina-status"></div>
+                                    <button class="btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="toggleSource('sina')" id="sina-btn">
+                                        启用
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="source-item">
+                                <div class="source-info">
+                                    <h4>东方财富</h4>
+                                    <p>A股备用数据源</p>
+                                </div>
+                                <div class="source-status">
+                                    <div class="status-dot active" id="eastmoney-status"></div>
+                                    <button class="btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="toggleSource('eastmoney')" id="eastmoney-btn">
+                                        启用
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="source-item">
+                                <div class="source-info">
+                                    <h4>Alpha Vantage</h4>
+                                    <p>美股/全球市场数据</p>
+                                </div>
+                                <div class="source-status">
+                                    <div class="status-dot active" id="alpha-status"></div>
+                                    <button class="btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="toggleSource('alpha')" id="alpha-btn">
+                                        启用
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="source-item">
+                                <div class="source-info">
+                                    <h4>模拟数据</h4>
+                                    <p>演示用数据（最后的备选）</p>
+                                </div>
+                                <div class="source-status">
+                                    <div class="status-dot active" id="mock-status"></div>
+                                    <button class="btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="toggleSource('mock')" id="mock-btn">
+                                        启用
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="analysis-tab">
+                        <div class="analysis-panel">
+                            <div class="analysis-header">
+                                <h4 class="analysis-title">📊 分析选项</h4>
+                            </div>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">当前自选股数</span>
+                                <span class="stat-value" id="stockCount">0</span>
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="stat-label">最后更新</span>
+                                <span class="stat-value" id="lastUpdate">--</span>
+                            </div>
+                        </div>
+
+                        <div class="btn-row" style="margin-bottom: 16px;">
+                            <button class="btn-primary" onclick="generateAnalysis()">
+                                <span>🤖</span>
+                                生成分析
+                            </button>
+                            <button class="btn-secondary" onclick="sendAnalysisNotification()">
+                                <span>📢</span>
+                                发送通知
+                            </button>
+                        </div>
+
+                        <div class="analysis-panel">
+                            <div class="analysis-header">
+                                <h4 class="analysis-title">📝 最新分析</h4>
+                                <button class="btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="clearAnalysis()">
+                                    清除
+                                </button>
+                            </div>
+                            <div class="analysis-content" id="analysisResult">
+                                点击"生成分析"按钮获取最新股票分析...
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card history-section">
@@ -1583,6 +1984,18 @@
                 });
             });
 
+            // 初始化新功能
+            initTabs();
+            
+            // 加载API设置
+            if (appData.apiSettings) {
+                document.getElementById('alphaVantageKey').value = appData.apiSettings.alphaVantage || 'demo';
+                document.getElementById('otherApiKey').value = appData.apiSettings.other || '';
+            }
+            
+            // 更新初始统计
+            document.getElementById('stockCount').textContent = appData.stockList.length;
+
             document.getElementById('stockInput').focus();
         }
 
@@ -1932,6 +2345,215 @@
                     <div class="history-content">${item.content.replace(/\n/g, '<br>')}</div>
                 </div>
             `).join('');
+        }
+
+        // ==================== 新功能代码 ====================
+        
+        // 全局状态
+        let appSources = {
+            sina: true,
+            eastmoney: true,
+            alpha: true,
+            mock: true
+        };
+        
+        let currentAnalysis = null;
+
+        // Tab切换功能
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有active类
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 添加当前tab的active类
+                    tab.classList.add('active');
+                    const tabId = tab.dataset.tab + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        // 保存API设置
+        function saveApiSettings() {
+            const alphaKey = document.getElementById('alphaVantageKey').value;
+            const otherKey = document.getElementById('otherApiKey').value;
+            
+            appData.apiSettings = {
+                alphaVantage: alphaKey,
+                other: otherKey
+            };
+            
+            storageManager.save(appData);
+            showToast('API设置已保存', 'success');
+        }
+
+        // 清空API设置
+        function clearApiSettings() {
+            document.getElementById('alphaVantageKey').value = 'demo';
+            document.getElementById('otherApiKey').value = '';
+            
+            if (appData.apiSettings) {
+                delete appData.apiSettings;
+                storageManager.save(appData);
+            }
+            showToast('API设置已清空', 'info');
+        }
+
+        // 切换数据源状态
+        function toggleSource(sourceName) {
+            appSources[sourceName] = !appSources[sourceName];
+            
+            const statusEl = document.getElementById(sourceName + '-status');
+            const btnEl = document.getElementById(sourceName + '-btn');
+            
+            if (appSources[sourceName]) {
+                statusEl.classList.add('active');
+                statusEl.classList.remove('inactive');
+                btnEl.textContent = '启用';
+            } else {
+                statusEl.classList.remove('active');
+                statusEl.classList.add('inactive');
+                btnEl.textContent = '禁用';
+            }
+            
+            showToast(`${sourceName} 数据源已${appSources[sourceName] ? '启用' : '禁用'}`, 'info');
+        }
+
+        // 生成股票分析
+        async function generateAnalysis() {
+            if (appData.stockList.length === 0) {
+                showToast('请先添加自选股票', 'error');
+                return;
+            }
+            
+            const resultEl = document.getElementById('analysisResult');
+            resultEl.innerHTML = '<div class="loading-spinner"></div> 正在生成分析...';
+            
+            try {
+                const stocks = [];
+                for (const code of appData.stockList) {
+                    try {
+                        const data = await stockDataManager.fetchStockData(code);
+                        stocks.push(data);
+                    } catch (error) {
+                        console.warn(`获取 ${code} 数据失败:`, error);
+                    }
+                }
+                
+                if (stocks.length === 0) {
+                    resultEl.innerHTML = '无法获取股票数据，请稍后重试。';
+                    return;
+                }
+                
+                // 生成分析报告
+                let analysis = generateDetailedAnalysis(stocks);
+                currentAnalysis = analysis;
+                
+                // 更新UI
+                resultEl.innerHTML = analysis;
+                document.getElementById('stockCount').textContent = stocks.length;
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleString('zh-CN');
+                
+                showToast('分析生成成功', 'success');
+            } catch (error) {
+                console.error('生成分析失败:', error);
+                resultEl.innerHTML = '生成分析时出错，请稍后重试。';
+            }
+        }
+
+        // 生成详细分析报告
+        function generateDetailedAnalysis(stocks) {
+            const upStocks = stocks.filter(s => s.changePercent > 0);
+            const downStocks = stocks.filter(s => s.changePercent < 0);
+            const flatStocks = stocks.filter(s => s.changePercent === 0);
+            
+            let html = '<div style="line-height: 1.8;">';
+            
+            html += `<p><strong>📊 市场概览</strong></p>`;
+            html += `<p>上涨: <span style="color: var(--accent-green);">${upStocks.length}只</span> | 下跌: <span style="color: var(--accent-red);">${downStocks.length}只</span> | 平盘: ${flatStocks.length}只</p>`;
+            html += `<br>`;
+            
+            if (upStocks.length > 0) {
+                html += `<p><strong>🚀 涨幅榜</strong></p>`;
+                const sortedUp = [...upStocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 3);
+                sortedUp.forEach(stock => {
+                    html += `<p>${stock.name}(${stock.code}): <span style="color: var(--accent-green);">+${stock.changePercent.toFixed(2)}%</span> ¥${stock.currentPrice.toFixed(2)}</p>`;
+                });
+                html += `<br>`;
+            }
+            
+            if (downStocks.length > 0) {
+                html += `<p><strong>📉 跌幅榜</strong></p>`;
+                const sortedDown = [...downStocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 3);
+                sortedDown.forEach(stock => {
+                    html += `<p>${stock.name}(${stock.code}): <span style="color: var(--accent-red);">${stock.changePercent.toFixed(2)}%</span> ¥${stock.currentPrice.toFixed(2)}</p>`;
+                });
+                html += `<br>`;
+            }
+            
+            // 整体市场判断
+            const avgChange = stocks.reduce((sum, s) => sum + s.changePercent, 0) / stocks.length;
+            html += `<p><strong>🎯 市场判断</strong></p>`;
+            if (avgChange > 1) {
+                html += `<p>市场整体强势，建议关注涨幅榜股票</p>`;
+            } else if (avgChange > 0) {
+                html += `<p>市场温和上涨，保持谨慎乐观</p>`;
+            } else if (avgChange > -1) {
+                html += `<p>市场小幅调整，注意控制仓位</p>`;
+            } else {
+                html += `<p>市场整体走弱，建议观望为主</p>`;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 发送分析通知
+        async function sendAnalysisNotification() {
+            if (!appData.settings.notifyEnabled) {
+                showToast('请先开启通知权限', 'error');
+                return;
+            }
+            
+            if (appData.stockList.length === 0) {
+                showToast('请先添加自选股票', 'error');
+                return;
+            }
+            
+            if (!currentAnalysis) {
+                await generateAnalysis();
+            }
+            
+            // 生成纯文本版本的通知
+            const stocks = [];
+            for (const code of appData.stockList) {
+                try {
+                    const data = await stockDataManager.fetchStockData(code);
+                    stocks.push(data);
+                } catch (error) {
+                    console.warn(`获取 ${code} 数据失败:`, error);
+                }
+            }
+            
+            const summary = analysisEngine.generateSummary(stocks);
+            
+            notificationManager.sendNotification('📊 股票分析报告', {
+                body: summary,
+                tag: 'analysis-notification'
+            });
+            
+            addToHistory(summary);
+            showToast('分析通知已发送', 'success');
+        }
+
+        // 清除分析
+        function clearAnalysis() {
+            currentAnalysis = null;
+            document.getElementById('analysisResult').innerHTML = '点击"生成分析"按钮获取最新股票分析...';
+            showToast('分析已清除', 'info');
         }
 
         // 显示提示

@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地股票分析提醒系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .gradient-orb-1 {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, var(--accent-green) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .gradient-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, var(--accent-blue) 0%, transparent 70%);
+            bottom: -150px;
+            left: -100px;
+            animation-delay: -10s;
+        }
+
+        .noise-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 24px 32px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            font-size: 40px;
+        }
+
+        .logo-text h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .current-time {
+            text-align: right;
+        }
+
+        .current-time .time {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .current-time .date {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .notification-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-status:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .notification-status.active {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--accent-green);
+        }
+
+        .notification-status .icon {
+            font-size: 20px;
+        }
+
+        .notification-status .text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 32px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 28px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title .icon {
+            font-size: 24px;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stock-input {
+            flex: 1;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .stock-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .stock-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .add-btn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+        }
+
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .stock-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            animation: cardReveal 0.5s ease-out backwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stock-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .stock-card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes cardReveal {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .stock-info h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stock-info .code {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .delete-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            border-radius: 8px;
+            color: var(--accent-red);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .delete-btn:hover {
+            background: var(--accent-red);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .stock-price {
+            margin-bottom: 16px;
+        }
+
+        .current-price {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .price-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 12px;
+        }
+
+        .price-change.up {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+        }
+
+        .price-change.down {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        .stock-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-item .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .detail-item .value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .settings-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 28px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .setting-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            background: var(--bg-secondary);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-green);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            left: 32px;
+        }
+
+        .time-input {
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .test-notify-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .test-notify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .history-section {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-section::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-section::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .history-section::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .history-item {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .history-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .notification-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.4s ease, slideOutRight 0.4s ease 4.6s forwards;
+            z-index: 1000;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        .notification-badge.success {
+            border-color: var(--accent-green);
+        }
+
+        .notification-badge.error {
+            border-color: var(--accent-red);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 14px 28px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--accent-green);
+        }
+
+        .toast.error {
+            border-color: var(--accent-red);
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .right-panel {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .header-info {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .current-time {
+                text-align: center;
+            }
+
+            .input-section {
+                flex-direction: column;
+            }
+
+            .add-btn {
+                justify-content: center;
+            }
+
+            .stock-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="gradient-orb gradient-orb-1"></div>
+        <div class="gradient-orb gradient-orb-2"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📈</div>
+                <div class="logo-text">
+                    <h1>股票提醒助手</h1>
+                    <p>本地数据 · 隐私安全 · 自动提醒</p>
+                </div>
+            </div>
+            <div class="header-info">
+                <div class="current-time">
+                    <div class="time" id="currentTime">--:--</div>
+                    <div class="date" id="currentDate">----年--月--日</div>
+                </div>
+                <div class="notification-status" id="notificationStatus" onclick="toggleNotificationPermission()">
+                    <span class="icon">🔔</span>
+                    <span class="text">开启通知</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="card">
+                    <h2 class="card-title">
+                        <span class="icon">📋</span>
+                        自选股票
+                    </h2>
+                    <div class="input-section">
+                        <input 
+                            type="text" 
+                            class="stock-input" 
+                            id="stockInput" 
+                            placeholder="输入股票代码，如: 600519"
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button class="add-btn" onclick="addStock()">
+                            <span>➕</span>
+                            添加
+                        </button>
+                    </div>
+                    <div class="stock-grid" id="stockGrid">
+                        <div class="empty-state">
+                            <div class="icon">📊</div>
+                            <h3>暂无自选股票</h3>
+                            <p>在上方输入股票代码添加自选</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="settings-card">
+                    <h3 class="card-title">
+                        <span class="icon">⚙️</span>
+                        提醒设置
+                    </h3>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>自动提醒</h4>
+                            <p>每日定时发送股票分析</p>
+                        </div>
+                        <div class="toggle-switch" id="autoNotifyToggle" onclick="toggleAutoNotify()"></div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>提醒时间</h4>
+                            <p>选择每日提醒时间</p>
+                        </div>
+                        <input 
+                            type="time" 
+                            class="time-input" 
+                            id="notifyTime" 
+                            value="15:00"
+                            onchange="updateNotifyTime()"
+                        >
+                    </div>
+
+                    <button class="test-notify-btn" onclick="sendTestNotification()">
+                        <span>🧪</span>
+                        测试通知
+                    </button>
+                </div>
+
+                <div class="card history-section">
+                    <h3 class="card-title">
+                        <span class="icon">📜</span>
+                        通知历史
+                    </h3>
+                    <div id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <h3>暂无通知记录</h3>
+                            <p>添加股票后将自动记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 存储管理器
+        class StorageManager {
+            constructor() {
+                this.storageKey = 'stockNotifierData';
+            }
+
+            load() {
+                try {
+                    const data = localStorage.getItem(this.storageKey);
+                    return data ? JSON.parse(data) : this.getDefaultData();
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    return this.getDefaultData();
+                }
+            }
+
+            save(data) {
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(data));
+                } catch (error) {
+                    console.error('保存数据失败:', error);
+                }
+            }
+
+            getDefaultData() {
+                return {
+                    stockList: [],
+                    settings: {
+                        notifyTime: '15:00',
+                        autoNotify: false,
+                        notifyEnabled: false
+                    },
+                    notificationHistory: []
+                };
+            }
+        }
+
+        // 股票数据管理器
+        class StockDataManager {
+            constructor() {
+                this.cache = new Map();
+                this.cacheTimeout = 30000; // 30秒缓存
+                this.apiSources = [
+                    {
+                        name: 'sina',
+                        url: (code) => `https://hq.sinajs.cn/list=${this.formatCode(code)}`,
+                        parser: this.parseSinaData.bind(this)
+                    },
+                    {
+                        name: 'eastmoney',
+                        url: (code) => `https://push2.eastmoney.com/api/qt/stock/get?secid=${this.getMarketCode(code)}.${code}&fields=f43,f44,f45,f46,f47,f48,f57,f58`,
+                        parser: this.parseEastmoneyData.bind(this)
+                    }
+                ];
+            }
+
+            formatCode(code) {
+                code = code.trim().toUpperCase();
+                if (!code.startsWith('SH') && !code.startsWith('SZ') && !code.startsWith('HK')) {
+                    if (code.startsWith('6')) {
+                        code = 'sh' + code;
+                    } else if (code.startsWith('0') || code.startsWith('3')) {
+                        code = 'sz' + code;
+                    } else if (code.startsWith('HK')) {
+                        code = code.toLowerCase();
+                    }
+                }
+                return code;
+            }
+
+            getMarketCode(code) {
+                code = code.trim();
+                if (code.startsWith('6')) return '1';  // 上证
+                if (code.startsWith('0') || code.startsWith('3')) return '0';  // 深证
+                if (code.startsWith('4') || code.startsWith('8')) return '0';  // 北交所
+                return '1';
+            }
+
+            async fetchStockData(code) {
+                const cacheKey = code;
+                const cached = this.cache.get(cacheKey);
+                
+                if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+                    return cached.data;
+                }
+
+                for (const source of this.apiSources) {
+                    try {
+                        const response = await fetch(source.url(code), {
+                            method: 'GET',
+                            headers: {
+                                'Accept': '*/*',
+                                'Referer': 'https://finance.sina.com.cn'
+                            }
+                        });
+
+                        if (!response.ok) continue;
+
+                        const text = await response.text();
+                        const data = source.parser(text, code);
+
+                        if (data) {
+                            this.cache.set(cacheKey, {
+                                data,
+                                timestamp: Date.now()
+                            });
+                            return data;
+                        }
+                    } catch (error) {
+                        console.warn(`从 ${source.name} 获取数据失败，尝试备用源:`, error);
+                        continue;
+                    }
+                }
+
+                throw new Error('所有数据源均不可用');
+            }
+
+            parseSinaData(text, code) {
+                try {
+                    const match = text.match(/="([^"]+)"/);
+                    if (!match) return null;
+
+                    const parts = match[1].split(',');
+                    if (parts.length < 10) return null;
+
+                    const name = parts[0];
+                    const openPrice = parseFloat(parts[1]) || 0;
+                    const yesterdayClose = parseFloat(parts[2]) || 0;
+                    const currentPrice = parseFloat(parts[3]) || 0;
+                    const highPrice = parseFloat(parts[4]) || 0;
+                    const lowPrice = parseFloat(parts[5]) || 0;
+                    const volume = parseFloat(parts[8]) || 0;
+                    const turnover = parseFloat(parts[9]) || 0;
+
+                    const changeAmount = currentPrice - yesterdayClose;
+                    const changePercent = yesterdayClose ? (changeAmount / yesterdayClose * 100) : 0;
+
+                    return {
+                        code: code.replace(/(sh|sz)/gi, ''),
+                        name: name,
+                        currentPrice: currentPrice,
+                        yesterdayClose: yesterdayClose,
+                        openPrice: openPrice,
+                        highPrice: highPrice,
+                        lowPrice: lowPrice,
+                        volume: volume,
+                        turnover: turnover,
+                        changeAmount: changeAmount,
+                        changePercent: changePercent,
+                        timestamp: Date.now()
+                    };
+                } catch (error) {
+                    console.error('解析新浪数据失败:', error);
+                    return null;
+                }
+            }
+
+            parseEastmoneyData(text, code) {
+                try {
+                    const data = JSON.parse(text);
+                    if (!data.data || !data.data.f43) return null;
+
+                    const d = data.data;
+                    const changeAmount = (d.f43 - d.f44) || 0;
+                    const changePercent = d.f44 ? (changeAmount / d.f44 * 100) : 0;
+
+                    return {
+                        code: code,
+                        name: d.f58 || code,
+                        currentPrice: d.f43 / 100,
+                        yesterdayClose: d.f44 / 100,
+                        openPrice: d.f45 / 100,
+                        highPrice: d.f46 / 100,
+                        lowPrice: d.f47 / 100,
+                        volume: d.f48,
+                        turnover: d.f49,
+                        changeAmount: changeAmount,
+                        changePercent: changePercent,
+                        timestamp: Date.now()
+                    };
+                } catch (error) {
+                    console.error('解析东方财富数据失败:', error);
+                    return null;
+                }
+            }
+        }
+
+        // 通知管理器
+        class NotificationManager {
+            constructor() {
+                this.permission = 'default';
+            }
+
+            async requestPermission() {
+                if (!('Notification' in window)) {
+                    console.warn('浏览器不支持通知功能');
+                    return false;
+                }
+
+                if (Notification.permission === 'granted') {
+                    this.permission = 'granted';
+                    return true;
+                }
+
+                if (Notification.permission !== 'denied') {
+                    const permission = await Notification.requestPermission();
+                    this.permission = permission;
+                    return permission === 'granted';
+                }
+
+                return false;
+            }
+
+            sendNotification(title, options = {}) {
+                if (this.permission !== 'granted') {
+                    console.warn('通知权限未授权');
+                    return null;
+                }
+
+                try {
+                    const notification = new Notification(title, {
+                        icon: '📈',
+                        badge: '📈',
+                        requireInteraction: false,
+                        silent: false,
+                        ...options
+                    });
+
+                    notification.onclick = () => {
+                        window.focus();
+                        notification.close();
+                    };
+
+                    setTimeout(() => notification.close(), 10000);
+
+                    return notification;
+                } catch (error) {
+                    console.error('发送通知失败:', error);
+                    return null;
+                }
+            }
+        }
+
+        // 分析引擎
+        class AnalysisEngine {
+            generateSummary(stocks) {
+                if (!stocks || stocks.length === 0) {
+                    return '暂无自选股票数据';
+                }
+
+                const upStocks = stocks.filter(s => s.changePercent > 0);
+                const downStocks = stocks.filter(s => s.changePercent < 0);
+                const flatStocks = stocks.filter(s => s.changePercent === 0);
+
+                let summary = `📊 自选股今日概况\n\n`;
+                summary += `上涨 ${upStocks.length} 只 | 下跌 ${downStocks.length} 只 | 平盘 ${flatStocks.length} 只\n\n`;
+
+                if (upStocks.length > 0) {
+                    summary += `🚀 涨幅最大:\n`;
+                    const best = upStocks.reduce((max, s) => s.changePercent > max.changePercent ? s : max);
+                    summary += `  ${best.name}(${best.code}) +${best.changePercent.toFixed(2)}%\n\n`;
+                }
+
+                if (downStocks.length > 0) {
+                    summary += `📉 跌幅最大:\n`;
+                    const worst = downStocks.reduce((min, s) => s.changePercent < min.changePercent ? s : min);
+                    summary += `  ${worst.name}(${worst.code}) ${worst.changePercent.toFixed(2)}%\n\n`;
+                }
+
+                summary += `详细数据已更新，请查看应用`;
+
+                return summary;
+            }
+
+            calculateTrend(stock) {
+                if (stock.changePercent > 2) return '强势上涨';
+                if (stock.changePercent > 0) return '小幅上涨';
+                if (stock.changePercent === 0) return '横盘整理';
+                if (stock.changePercent > -2) return '小幅下跌';
+                return '弱势下跌';
+            }
+        }
+
+        // 全局实例
+        const storageManager = new StorageManager();
+        const stockDataManager = new StockDataManager();
+        const notificationManager = new NotificationManager();
+        const analysisEngine = new AnalysisEngine();
+
+        let appData = storageManager.load();
+        let schedulerTimer = null;
+
+        // 初始化
+        function init() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            updateNotificationStatus();
+            renderStockList();
+            renderHistory();
+            loadSettings();
+            
+            setupScheduler();
+
+            document.getElementById('stockInput').focus();
+        }
+
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            
+            document.getElementById('currentTime').textContent = timeStr;
+            document.getElementById('currentDate').textContent = dateStr;
+        }
+
+        // 通知权限切换
+        async function toggleNotificationPermission() {
+            if (appData.settings.notifyEnabled) {
+                appData.settings.notifyEnabled = false;
+                notificationManager.permission = 'default';
+                showToast('已关闭通知权限', 'info');
+            } else {
+                const granted = await notificationManager.requestPermission();
+                appData.settings.notifyEnabled = granted;
+                showToast(granted ? '已开启通知权限' : '通知权限被拒绝', granted ? 'success' : 'error');
+            }
+            
+            storageManager.save(appData);
+            updateNotificationStatus();
+        }
+
+        // 更新通知状态显示
+        function updateNotificationStatus() {
+            const statusEl = document.getElementById('notificationStatus');
+            if (appData.settings.notifyEnabled) {
+                statusEl.classList.add('active');
+                statusEl.querySelector('.text').textContent = '通知已开启';
+                statusEl.querySelector('.icon').textContent = '🔔';
+            } else {
+                statusEl.classList.remove('active');
+                statusEl.querySelector('.text').textContent = '开启通知';
+                statusEl.querySelector('.icon').textContent = '🔕';
+            }
+        }
+
+        // 添加股票
+        async function addStock() {
+            const input = document.getElementById('stockInput');
+            const code = input.value.trim();
+
+            if (!code) {
+                showToast('请输入股票代码', 'error');
+                return;
+            }
+
+            if (appData.stockList.includes(code)) {
+                showToast('该股票已在自选列表中', 'error');
+                return;
+            }
+
+            const btn = document.querySelector('.add-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading-spinner"></span> 添加中...';
+            btn.disabled = true;
+
+            try {
+                const data = await stockDataManager.fetchStockData(code);
+                
+                appData.stockList.push(code);
+                storageManager.save(appData);
+                
+                input.value = '';
+                renderStockList();
+                showToast(`已添加 ${data.name}(${data.code})`, 'success');
+            } catch (error) {
+                console.error('添加股票失败:', error);
+                showToast('获取股票数据失败，请检查代码是否正确', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 回车添加
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addStock();
+            }
+        }
+
+        // 删除股票
+        function deleteStock(code) {
+            appData.stockList = appData.stockList.filter(c => c !== code);
+            storageManager.save(appData);
+            renderStockList();
+            showToast('已删除该股票', 'info');
+        }
+
+        // 渲染股票列表
+        async function renderStockList() {
+            const grid = document.getElementById('stockGrid');
+
+            if (appData.stockList.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📊</div>
+                        <h3>暂无自选股票</h3>
+                        <p>在上方输入股票代码添加自选</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = '';
+
+            for (let i = 0; i < appData.stockList.length; i++) {
+                const code = appData.stockList[i];
+                const card = await createStockCard(code, i);
+                grid.appendChild(card);
+            }
+        }
+
+        // 创建股票卡片
+        async function createStockCard(code, index) {
+            const card = document.createElement('div');
+            card.className = 'stock-card';
+            card.style.animationDelay = `${index * 0.1}s`;
+
+            try {
+                const data = await stockDataManager.fetchStockData(code);
+                
+                const isUp = data.changePercent >= 0;
+                const changeClass = isUp ? 'up' : 'down';
+                const changeSign = isUp ? '+' : '';
+
+                card.innerHTML = `
+                    <div class="stock-header">
+                        <div class="stock-info">
+                            <h3>${data.name}</h3>
+                            <div class="code">${data.code}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteStock('${code}')" title="删除">✕</button>
+                    </div>
+                    <div class="stock-price">
+                        <span class="current-price">${data.currentPrice.toFixed(2)}</span>
+                        <span class="price-change ${changeClass}">
+                            ${isUp ? '▲' : '▼'} ${changeSign}${data.changePercent.toFixed(2)}%
+                        </span>
+                    </div>
+                    <div class="stock-details">
+                        <div class="detail-item">
+                            <span class="label">开盘价</span>
+                            <span class="value">${data.openPrice.toFixed(2)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">最高价</span>
+                            <span class="value">${data.highPrice.toFixed(2)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">最低价</span>
+                            <span class="value">${data.lowPrice.toFixed(2)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">成交量</span>
+                            <span class="value">${formatNumber(data.volume)}手</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                card.innerHTML = `
+                    <div class="stock-header">
+                        <div class="stock-info">
+                            <h3>${code}</h3>
+                            <div class="code">加载失败</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteStock('${code}')" title="删除">✕</button>
+                    </div>
+                    <div class="empty-state">
+                        <p>无法获取数据</p>
+                    </div>
+                `;
+            }
+
+            return card;
+        }
+
+        // 格式化数字
+        function formatNumber(num) {
+            if (num >= 100000000) {
+                return (num / 100000000).toFixed(2) + '亿';
+            } else if (num >= 10000) {
+                return (num / 10000).toFixed(2) + '万';
+            }
+            return num.toString();
+        }
+
+        // 自动提醒开关
+        function toggleAutoNotify() {
+            appData.settings.autoNotify = !appData.settings.autoNotify;
+            storageManager.save(appData);
+            updateSettingsUI();
+            setupScheduler();
+            
+            showToast(
+                appData.settings.autoNotify ? '已开启自动提醒' : '已关闭自动提醒',
+                'success'
+            );
+        }
+
+        // 更新时间设置
+        function updateNotifyTime() {
+            const timeInput = document.getElementById('notifyTime');
+            appData.settings.notifyTime = timeInput.value;
+            storageManager.save(appData);
+            setupScheduler();
+            showToast('提醒时间已更新', 'success');
+        }
+
+        // 加载设置
+        function loadSettings() {
+            document.getElementById('notifyTime').value = appData.settings.notifyTime || '15:00';
+            updateSettingsUI();
+        }
+
+        // 更新设置UI
+        function updateSettingsUI() {
+            const toggle = document.getElementById('autoNotifyToggle');
+            if (appData.settings.autoNotify) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+        }
+
+        // 设置定时器
+        function setupScheduler() {
+            if (schedulerTimer) {
+                clearInterval(schedulerTimer);
+                schedulerTimer = null;
+            }
+
+            if (!appData.settings.autoNotify || appData.stockList.length === 0) {
+                return;
+            }
+
+            const checkTime = () => {
+                const now = new Date();
+                const currentTime = now.toTimeString().slice(0, 5);
+                const notifyTime = appData.settings.notifyTime || '15:00';
+
+                if (currentTime === notifyTime) {
+                    sendDailyNotification();
+                }
+            };
+
+            schedulerTimer = setInterval(checkTime, 60000);
+        }
+
+        // 发送每日通知
+        async function sendDailyNotification() {
+            if (!appData.settings.notifyEnabled) {
+                return;
+            }
+
+            try {
+                const stocks = [];
+                for (const code of appData.stockList) {
+                    try {
+                        const data = await stockDataManager.fetchStockData(code);
+                        stocks.push(data);
+                    } catch (error) {
+                        console.warn(`获取 ${code} 数据失败:`, error);
+                    }
+                }
+
+                const summary = analysisEngine.generateSummary(stocks);
+                
+                notificationManager.sendNotification('📈 股票提醒', {
+                    body: summary,
+                    tag: 'daily-stock-notify'
+                });
+
+                addToHistory(summary);
+                showToast('已发送每日股票提醒', 'success');
+            } catch (error) {
+                console.error('发送每日通知失败:', error);
+            }
+        }
+
+        // 发送测试通知
+        function sendTestNotification() {
+            if (!appData.settings.notifyEnabled) {
+                showToast('请先开启通知权限', 'error');
+                return;
+            }
+
+            const testContent = `这是一条测试通知\n\n当前自选股数量: ${appData.stockList.length} 只\n提醒时间: ${appData.settings.notifyTime}`;
+            
+            notificationManager.sendNotification('🧪 测试通知', {
+                body: testContent,
+                tag: 'test-notify'
+            });
+
+            addToHistory(testContent);
+            showToast('测试通知已发送', 'success');
+        }
+
+        // 添加到历史记录
+        function addToHistory(content) {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN');
+
+            appData.notificationHistory.unshift({
+                time: timeStr,
+                content: content
+            });
+
+            if (appData.notificationHistory.length > 50) {
+                appData.notificationHistory = appData.notificationHistory.slice(0, 50);
+            }
+
+            storageManager.save(appData);
+            renderHistory();
+        }
+
+        // 渲染历史记录
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+
+            if (appData.notificationHistory.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <h3>暂无通知记录</h3>
+                        <p>添加股票后将自动记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = appData.notificationHistory.map(item => `
+                <div class="history-item">
+                    <div class="history-time">${item.time}</div>
+                    <div class="history-content">${item.content.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+        }
+
+        // 显示提示
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
